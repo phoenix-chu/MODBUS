@@ -183,10 +183,10 @@
     </QtUic>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\BK9000\libmodbus\modbus-data.c" />
-    <ClCompile Include="..\..\BK9000\libmodbus\modbus-rtu.c" />
-    <ClCompile Include="..\..\BK9000\libmodbus\modbus-tcp.c" />
-    <ClCompile Include="..\..\BK9000\libmodbus\modbus.c" />
+    <ClCompile Include="libmodbus\modbus-data.c" />
+    <ClCompile Include="libmodbus\modbus-rtu.c" />
+    <ClCompile Include="libmodbus\modbus-tcp.c" />
+    <ClCompile Include="libmodbus\modbus.c" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mainwindow.cpp" />
   </ItemGroup>
@@ -203,14 +203,14 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generate moc_predefs.h</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">debug\moc_predefs.h;%(Outputs)</Outputs>
     </CustomBuild>
-    <ClInclude Include="..\..\BK9000\libmodbus\config.h" />
-    <ClInclude Include="..\..\BK9000\libmodbus\modbus-private.h" />
-    <ClInclude Include="..\..\BK9000\libmodbus\modbus-rtu-private.h" />
-    <ClInclude Include="..\..\BK9000\libmodbus\modbus-rtu.h" />
-    <ClInclude Include="..\..\BK9000\libmodbus\modbus-tcp-private.h" />
-    <ClInclude Include="..\..\BK9000\libmodbus\modbus-tcp.h" />
-    <ClInclude Include="..\..\BK9000\libmodbus\modbus-version.h" />
-    <ClInclude Include="..\..\BK9000\libmodbus\modbus.h" />
+    <ClInclude Include="libmodbus\config.h" />
+    <ClInclude Include="libmodbus\modbus-private.h" />
+    <ClInclude Include="libmodbus\modbus-rtu-private.h" />
+    <ClInclude Include="libmodbus\modbus-rtu.h" />
+    <ClInclude Include="libmodbus\modbus-tcp-private.h" />
+    <ClInclude Include="libmodbus\modbus-tcp.h" />
+    <ClInclude Include="libmodbus\modbus-version.h" />
+    <ClInclude Include="libmodbus\modbus.h" />
     <ClInclude Include="ui_mainwindow.h" />
   </ItemGroup>
   <ItemGroup>

@@ -43,16 +43,16 @@
     <ClCompile Include="mainwindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\BK9000\libmodbus\modbus.c">
+    <ClCompile Include="libmodbus\modbus.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\BK9000\libmodbus\modbus-data.c">
+    <ClCompile Include="libmodbus\modbus-data.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\BK9000\libmodbus\modbus-rtu.c">
+    <ClCompile Include="libmodbus\modbus-rtu.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\BK9000\libmodbus\modbus-tcp.c">
+    <ClCompile Include="libmodbus\modbus-tcp.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -75,28 +75,28 @@
     </QtUic>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\BK9000\libmodbus\config.h">
+    <ClInclude Include="libmodbus\config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\BK9000\libmodbus\modbus.h">
+    <ClInclude Include="libmodbus\modbus.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\BK9000\libmodbus\modbus-private.h">
+    <ClInclude Include="libmodbus\modbus-private.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\BK9000\libmodbus\modbus-rtu.h">
+    <ClInclude Include="libmodbus\modbus-rtu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\BK9000\libmodbus\modbus-rtu-private.h">
+    <ClInclude Include="libmodbus\modbus-rtu-private.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\BK9000\libmodbus\modbus-tcp.h">
+    <ClInclude Include="libmodbus\modbus-tcp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\BK9000\libmodbus\modbus-tcp-private.h">
+    <ClInclude Include="libmodbus\modbus-tcp-private.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\BK9000\libmodbus\modbus-version.h">
+    <ClInclude Include="libmodbus\modbus-version.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
