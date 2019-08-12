@@ -32,7 +32,7 @@ private:
 	QTime time;
 	void BUTTON(bool status);
 	void SWITCH(bool status);
-	void PRA_INIT();
+	void INIT();
 	void LIGHT(bool status);
 
 private slots:

@@ -1,15 +1,22 @@
-﻿#include "mainwindow.h"
+﻿#ifndef IS_GUARD
+#define IS_GUARD
+
+#include "mainwindow.h"
 #include "ui_mainwindow.h"
 
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
+
 #include <time.h>
 #include <modbus.h>
 #include <Windows.h>
 
+#endif // IS_GUARD
+
 //#define OFFLINE
 #define MODBUS_IP "192.168.0.1"
+#define MODBUS_PORT 502
 #define MODBUS_READ_ADDR 0
 #define MODBUS_WRITE_ADDR 0
 #define MODBUS_READ_LEN 2
@@ -22,23 +29,34 @@
 #define TIMESLOT 999
 #define BTN_PRESS 0
 #define BTN_RELEASE 1
+#define BTN_X 256
+#define BTN_Y 256
+#define BTN_D 256
+#define SWT_X 128
+#define SWT_Y 64
+#define SWT_D 64
+#define SWT_P_X 288
+#define SWT_P_Y 96
+#define BTN_L 340
+#define BTN_R 510
+#define TIMEOUT_WAIT 1000
 
-static bool pcnt;
-static bool btn_event;
+static bool g_pcnt;
+static bool g_btn_event;
 static bool act;
-static bool tkl_act;
+static bool g_tkl_act;
 static bool tkl;
-static bool swt_act;
-static clock_t start;
-static modbus_t *mb;
-static uint8_t light[32];
+static bool g_swt_act;
+static clock_t g_start;
+static modbus_t *g_mb;
+static uint8_t g_light[32];
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-	PRA_INIT();
+	INIT();
 
 	timer = new QTimer(this);
 	connect(timer, SIGNAL(timeout()), this, SLOT(MAIN()));
@@ -50,23 +68,23 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->graph_all->viewport()->installEventFilter(this);
 }
 
-void MainWindow::PRA_INIT()
+void MainWindow::INIT()
 {
-	pcnt = 0;
-	btn_event = BTN_RELEASE;
+	g_pcnt = 0;
+	g_btn_event = BTN_RELEASE;
 	act = 0;
-	tkl_act = 0;
+	g_tkl_act = 0;
 	tkl = 0;
-	swt_act = 0;
-	start = 0;
-	light[0] = {0};
+	g_swt_act = 0;
+	g_start = 0;
+	g_light[0] = {0};
 
 #ifndef OFFLINE
-	mb = modbus_new_tcp(MODBUS_IP, 502);
-	modbus_connect(mb);
-	modbus_set_response_timeout(mb, MODBUS_TIMEOUT_SEC, MODBUS_TIMEOUT_USEC);
+	g_mb = modbus_new_tcp(MODBUS_IP, MODBUS_PORT);
+	modbus_connect(g_mb);
+	modbus_set_response_timeout(g_mb, MODBUS_TIMEOUT_SEC, MODBUS_TIMEOUT_USEC);
 #endif
-	light[WRITE_LIGHT] = pcnt;
+	g_light[WRITE_LIGHT] = g_pcnt;
 }
 
 void delay(int ms)
@@ -75,138 +93,120 @@ void delay(int ms)
 	while (clock() - init < ms);
 }
 
-int timeout(int ret, modbus_t *mb)
+int timeout(int ret)
 {
 	int ret_now;
-	if (ret == -1)
-	{
+	if (ret == -1) {
 		printf("MODBUS connect error\n");
-		modbus_close(mb);
-		modbus_free(mb);
+		modbus_close(g_mb);
+		modbus_free(g_mb);
 
-		while (1)
-		{
-			delay(1000);
+		while (1) {
+			delay(TIMEOUT_WAIT);
 			printf("MODBUS is connecting...\n");
-			mb = modbus_new_tcp(MODBUS_IP, 502);
-			ret_now = modbus_connect(mb);
-			if (ret_now != -1)
-			{
-				modbus_set_response_timeout(mb, MODBUS_TIMEOUT_SEC, MODBUS_TIMEOUT_USEC);
+			g_mb = modbus_new_tcp(MODBUS_IP, MODBUS_PORT);
+			ret_now = modbus_connect(g_mb);
+			if (ret_now != -1) {
+				modbus_set_response_timeout(g_mb, MODBUS_TIMEOUT_SEC, MODBUS_TIMEOUT_USEC);
 				printf("MODBUS connect again\n");
-				delay(100);
 				break;
-			}
-			else
-			{
-				modbus_close(mb);
-				modbus_free(mb);
+			} else {
+				modbus_close(g_mb);
+				modbus_free(g_mb);
 			}
 		}
 		return 1;
-	}
-	else
+	} else {
 		return 0;
-
+	}
 }
 
 void MainWindow::MAIN()
 {
 	ui->graph_all->scene()->clear();
 #ifdef OFFLINE   
-	BUTTON(btn_event ? 1 : 0);
-	LIGHT(btn_event ? 0 : 1);
-	SWITCH(btn_event ? 0 : 1);
+	BUTTON(g_btn_event ? 1 : 0);
+	LIGHT(g_btn_event ? 0 : 1);
+	SWITCH(g_btn_event ? 0 : 1);
 #else	
 	uint8_t button[32];
 	int ret_b, ret_l, tm;
 	tm = 0;
-	ret_b = modbus_read_input_bits(mb, MODBUS_READ_ADDR, MODBUS_READ_LEN, button);
+	ret_b = modbus_read_input_bits(g_mb, MODBUS_READ_ADDR, MODBUS_READ_LEN, button);
 	//////////////////////
-	tm = timeout(ret_b, mb);
-	if (tm)
-	{
-		pcnt = 0;
-		light[WRITE_LIGHT] = pcnt;
-		tkl_act = 0;
-		return;
+	tm = timeout(ret_b);
+	if (tm) {
+		g_pcnt = 0;
+		g_light[WRITE_LIGHT] = g_pcnt;
+		g_tkl_act = 0;
+		return; //break
 	}
 	//////////////////////	
 	BUTTON(act ? 0 :1);
 
-	if (!button[READ_BUTTON] && btn_event)
+	if (!button[READ_BUTTON] && g_btn_event) {
 		act = 0;
+	}
 
-	if (!button[READ_SWITCH])
-	{
+	if (!button[READ_SWITCH]) {
 		SWITCH(0);
-		if (swt_act)
-		{
+		if (g_swt_act) {
 			printf("switch on left\n");
-			light[WRITE_LIGHT] = 0;
-			pcnt = 0;
-			tkl_act = 0;
-			swt_act = 0;
+			g_light[WRITE_LIGHT] = 0;
+			g_pcnt = 0;
+			g_tkl_act = 0;
+			g_swt_act = 0;
 		}
 
-		if ( (button[READ_BUTTON] || !btn_event) && !act)
-		{
+		if ( (button[READ_BUTTON] || !g_btn_event) && !act) {
 			printf("TEST left: Button pressed in normal mode\n");
-			pcnt = !pcnt;
-			light[WRITE_LIGHT] = pcnt;
+			g_pcnt = !g_pcnt;
+			g_light[WRITE_LIGHT] = g_pcnt;
 			act = 1;
 		}
-	}
-	else
-	{
+	} else {
 		SWITCH(1);
-		if (!swt_act)
-		{
+		if (!g_swt_act) {
 			printf("switch on right\n");
-			light[WRITE_LIGHT] = 0;
-			pcnt = 0;
-			tkl_act = 0;
-			swt_act = 1;
+			g_light[WRITE_LIGHT] = 0;
+			g_pcnt = 0;
+			g_tkl_act = 0;
+			g_swt_act = 1;
 		}	
 
-		if ((button[READ_BUTTON] || !btn_event) && !act)
-		{
-			tkl_act = !tkl_act;
+		if ((button[READ_BUTTON] || !g_btn_event) && !act) {
+			g_tkl_act = !g_tkl_act;
 			printf("TEST right: Button pressed in flash mode\n");
 			act = 1;
-			start = clock();
+			g_start = clock();
 			tkl = !tkl;
-			light[WRITE_LIGHT] = tkl;
+			g_light[WRITE_LIGHT] = tkl;
 		}
 
-		if (tkl_act)
-		{
-			if (clock() - start > TIMESLOT)
-			{
-				start = clock();
+		if (g_tkl_act) {
+			if (clock() - g_start > TIMESLOT) {
+				g_start = clock();
 				tkl = !tkl;
-				light[WRITE_LIGHT] = tkl;
+				g_light[WRITE_LIGHT] = tkl;
 			}
-		}
-		else
-		{
-			light[WRITE_LIGHT] = 0;
+		} else {
+			g_light[WRITE_LIGHT] = 0;
 			tkl = 0;
 		}
 
 	}
-	ret_l = modbus_write_bits(mb, MODBUS_WRITE_ADDR, MODBUS_WRITE_LEN, light);
+	ret_l = modbus_write_bits(g_mb, MODBUS_WRITE_ADDR, MODBUS_WRITE_LEN, g_light);
 	//////////////////////
-	tm = timeout(ret_l, mb);
-	if (tm)
-	{
-		pcnt = 0;
-		light[WRITE_LIGHT] = pcnt;
-		tkl_act = 0;
+	tm = timeout(ret_l);
+	if (tm) {
+		g_pcnt = 0;
+		g_light[WRITE_LIGHT] = g_pcnt;
+		g_tkl_act = 0;
 		return;
+	} else {
+		(g_light[WRITE_LIGHT] == 1) ? LIGHT(1) : LIGHT(0);
 	}
-	else
-		(light[WRITE_LIGHT] == 1) ? LIGHT(256) : LIGHT(0);
+		
 	//////////////////////
 #endif	
 }
@@ -214,9 +214,9 @@ void MainWindow::MAIN()
 void MainWindow::LIGHT(bool status)
 {	
 	QPixmap *image_ori = new QPixmap("lightbulb_on_off.png");
-	QPixmap image_light = image_ori->copy(0, (status ? 256 : 0), 256, 256);
+	QPixmap image_light = image_ori->copy(0, (status ? BTN_D : 0), BTN_X, BTN_Y);
 	QGraphicsPixmapItem *item_light = ui->graph_all->scene()->addPixmap(image_light);
-	item_light->setOffset(QPointF(-256, 0));
+	item_light->setOffset(QPointF(-BTN_D, 0));
 	ui->graph_all->scene()->addItem(item_light);
 	
 	image_ori->swap(QPixmap());
@@ -225,7 +225,7 @@ void MainWindow::LIGHT(bool status)
 void MainWindow::BUTTON(bool status)
 {	
 	QPixmap *image_ori = new QPixmap("button_press_release.png");
-	QPixmap image_button = image_ori->copy(0, (status ? 0 : 256), 256, 256);
+	QPixmap image_button = image_ori->copy(0, (status ? 0 : BTN_D), BTN_X, BTN_Y);
 	QGraphicsPixmapItem *item_button = ui->graph_all->scene()->addPixmap(image_button);
 	item_button->setOffset(QPointF(0, 0));
 	ui->graph_all->scene()->addItem(item_button);
@@ -236,75 +236,34 @@ void MainWindow::BUTTON(bool status)
 void MainWindow::SWITCH(bool status)
 {
 	QPixmap *image_ori = new QPixmap("switches-on-and-off.png");
-	QPixmap image_switch = image_ori->copy(0, (status ? 64 : 0), 128, 64);
+	QPixmap image_switch = image_ori->copy(0, (status ? SWT_D : 0), SWT_X, SWT_Y);
 	QGraphicsPixmapItem *item_switch = ui->graph_all->scene()->addPixmap(image_switch);
-	item_switch->setOffset(QPointF(288, 96));
+	item_switch->setOffset(QPointF(SWT_P_X, SWT_P_Y));
 	ui->graph_all->scene()->addItem(item_switch);
 
 	image_ori->swap(QPixmap());
 }
-/*
-bool MainWindow::eventFilter(QObject *obj, QEvent *event)
-{
-	if (obj == ui->graph_all->viewport())
-	{
-		if (event->type() == QEvent::GraphicsSceneMousePress)//mouse button pressed
-		{
-			const QGraphicsSceneMouseEvent* const mouseEvent = static_cast<const QGraphicsSceneMouseEvent*>(event);
-			if (mouseEvent->button() & Qt::LeftButton)
-			{
-				const QPointF position = mouseEvent->scenePos();
-				if (position.x() > 0 && position.x() < 512)
-				{
-					btn_event = BTN_PRESS;
-					return true;
-				}
-			}
 
-		}
-		else if (event->type() == QEvent::GraphicsSceneMouseRelease)
-		{
-			btn_event = BTN_RELEASE;
-			return true;
-		}
-		else
-			return false;
-	}
-	else
-	{
-		// pass the event on to the parent class
-		return QMainWindow::eventFilter(obj, event);
-	}
-}
-*/
 bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 {
-	if (obj == ui->graph_all->viewport())
-	{
-		if (event->type() == QEvent::MouseButtonPress)//mouse button pressed
-		{
+	if (obj == ui->graph_all->viewport()) {
+		if (event->type() == QEvent::MouseButtonPress) {
 			QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
-			if (mouseEvent->button() == Qt::LeftButton)
-			{
+			if (mouseEvent->button() == Qt::LeftButton) {
 				const QPointF position = mouseEvent->pos();
-				if (position.x() > 340 && position.x() < 510)
-				{
-					btn_event = BTN_PRESS;
+				if (position.x() > BTN_L && position.x() < BTN_R) {
+					g_btn_event = BTN_PRESS;
 					return true;
 				}
 			}
-
-		}
-		else if (event->type() == QEvent::MouseButtonRelease)
-		{
-			btn_event = BTN_RELEASE;
+		} else if (event->type() == QEvent::MouseButtonRelease) {
+			g_btn_event = BTN_RELEASE;
 			return true;
-		}
-		else
+		} else {
 			return false;
-	}
-	else
-	{
+		}
+			
+	} else {
 		// pass the event on to the parent class
 		return QMainWindow::eventFilter(obj, event);
 	}
@@ -313,8 +272,8 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 MainWindow::~MainWindow()
 {
 #ifndef OFFLINE	
-	modbus_close(mb);
-	modbus_free(mb);
+	modbus_close(g_mb);
+	modbus_free(g_mb);
 #endif
 	ui->graph_all->scene()->clear();
 	delete ui;
